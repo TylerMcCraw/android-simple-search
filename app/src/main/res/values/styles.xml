@@ -1,0 +1,30 @@
+<resources>
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="actionBarStyle">@style/AppTheme.ActionBar</item>
+        <item name="colorPrimary">@color/smashing_gray</item>
+        <item name="colorPrimaryDark">@color/smashing_darkgray</item>
+        <item name="colorAccent">@color/smashing_pink</item>
+        <item name="android:textViewStyle">@style/AppTheme.TextStyle</item>
+        <item name="android:textAppearance">@style/TextAppearance.AppCompat.Title</item>
+    </style>
+
+    <!-- ActionBar Style -->
+    <style name="AppTheme.ActionBar" parent="Widget.AppCompat.ActionBar">
+        <item name="background">@color/smashing_gray</item>
+        <item name="titleTextStyle">@style/AppTheme.ActionBar.Text</item>
+        <item name="actionMenuTextColor">@color/white</item>
+    </style>
+
+    <!-- ActionBar Text Style -->
+    <style name="AppTheme.ActionBar.Text" parent="@android:style/TextAppearance">
+        <item name="android:textColor">@color/white</item>
+    </style>
+    <style name="AppTheme.AppBarOverlay" parent="ThemeOverlay.AppCompat.Dark.ActionBar" />
+    <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
+
+    <!-- Fonts -->
+    <style name="AppTheme.TextStyle" parent="android:Widget.TextView">
+        <item name="android:fontFamily">sans-serif-condensed</item>
+    </style>
+</resources>
