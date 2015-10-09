@@ -32,15 +32,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             getSupportActionBar().setHomeButtonEnabled(true);
         }
 
-//        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-//        fab.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View view) {
-//                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-//                        .setAction("Action", null).show();
-//            }
-//        });
-
         // Check if we're loading the CSV for the first time, so that we can start a service
         // to copy the CSV data into our DB
         SharedPreferences settings = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
