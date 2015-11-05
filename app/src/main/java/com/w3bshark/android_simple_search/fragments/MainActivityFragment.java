@@ -191,32 +191,10 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             toggleProgressBar(false);
         } else {
             mRecyclerAdapter.getFilter().filter(query);
-//            final ArrayList<CsvItem> filteredItemsList = filter(unfilteredCsvItems, query);
-//            mRecyclerAdapter.animateTo(filteredItemsList);
             mRecyclerView.scrollToPosition(0);
-//            csvItems.clear();
-//            csvItems.addAll(filteredItemsList);
             toggleProgressBar(false);
         }
     }
-
-//    private ArrayList<CsvItem> filter(ArrayList<CsvItem> items, String query) {
-//        final ArrayList<CsvItem> filteredModelList = new ArrayList<>();
-//
-//        if (items == null) {
-//            return filteredModelList;
-//        }
-//
-//        query = query.toLowerCase();
-//
-//        for (CsvItem item : items) {
-//            final String text = item.getDescription().toLowerCase();
-//            if (text.contains(query)) {
-//                filteredModelList.add(item);
-//            }
-//        }
-//        return filteredModelList;
-//    }
 
     @Override
     public void onPause() {

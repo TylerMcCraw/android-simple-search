@@ -19,12 +19,10 @@ import java.util.List;
 public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Filterable {
 
     public class TotalsViewHolder extends RecyclerView.ViewHolder {
-//        CardView cardView;
         TextView totalDescription;
 
         TotalsViewHolder(View itemView) {
             super(itemView);
-//            cardView = (CardView) itemView.findViewById(R.id.main_fragment_totals_cardview);
             totalDescription = (TextView)itemView.findViewById(R.id.totals_itemDescription);
         }
     }
@@ -42,18 +40,20 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     private Context context;
     private List<CsvItem> csvItems;
+    private List<CsvItem> unfilteredCsvItems;
     private static final int TOTALS_SECTION = 0;
     protected List<Integer> viewsForPositions = new ArrayList<>();
 
     public MainRecyclerAdapter(Context context, List<CsvItem> csvItems) {
         this.context = context;
         this.csvItems = csvItems;
+        this.unfilteredCsvItems = new ArrayList<>(csvItems);
         viewsForPositions.add(R.layout.recycler_totals_item);
     }
 
     @Override
     public Filter getFilter() {
-        return new SearchFilter(this, csvItems);
+        return new SearchFilter(this, unfilteredCsvItems);
     }
 
     @Override
@@ -118,6 +118,10 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         return csvItems == null ? viewsForPositions.size() : viewsForPositions.size() + csvItems.size();
     }
 
+    /**
+     * Defines search criteria for filtering data asynchronously within the adapter
+     * Also publishes the results of filtering to the adapter to update the UI
+     */
     public static class SearchFilter extends Filter {
         private final MainRecyclerAdapter adapter;
         private final List<CsvItem> originalList;
@@ -157,54 +161,4 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
             adapter.notifyDataSetChanged();
         }
     }
-//    public CsvItem removeItem(int position) {
-//        final CsvItem item = csvItems.remove(position);
-//        notifyItemRemoved(position);
-//        return item;
-//    }
-//
-//    public void addItem(int position, CsvItem item) {
-//        csvItems.add(position, item);
-//        notifyItemInserted(position);
-//    }
-//
-//    public void moveItem(int fromPosition, int toPosition) {
-//        final CsvItem item = csvItems.remove(fromPosition);
-//        csvItems.add(toPosition, item);
-//        notifyItemMoved(fromPosition, toPosition);
-//    }
-
-//    public void animateTo(ArrayList<CsvItem> items) {
-//        applyAndAnimateRemovals(items);
-//        applyAndAnimateAdditions(items);
-//        applyAndAnimateMovedItems(items);
-//        // Update the totals number displayed
-//        notifyItemChanged(TOTALS_SECTION);
-//    }
-
-//    private void applyAndAnimateRemovals(ArrayList<CsvItem> newItems) {
-//        for (int i = csvItems.size() - 1; i >= 0; i--) {
-//            final CsvItem item = csvItems.get(i);
-//            if (!newItems.contains(item)) {
-//                removeItem(i);
-//            }
-//        }
-//    }
-//    private void applyAndAnimateAdditions(ArrayList<CsvItem> newModels) {
-//        for (int i = 0, count = newModels.size(); i < count; i++) {
-//            final CsvItem item = newModels.get(i);
-//            if (!csvItems.contains(item)) {
-//                addItem(i, item);
-//            }
-//        }
-//    }
-//    private void applyAndAnimateMovedItems(ArrayList<CsvItem> newModels) {
-//        for (int toPosition = newModels.size() - 1; toPosition >= 0; toPosition--) {
-//            final CsvItem item = newModels.get(toPosition);
-//            final int fromPosition = csvItems.indexOf(item);
-//            if (fromPosition >= 0 && fromPosition != toPosition) {
-//                moveItem(fromPosition, toPosition);
-//            }
-//        }
-//    }
 }
