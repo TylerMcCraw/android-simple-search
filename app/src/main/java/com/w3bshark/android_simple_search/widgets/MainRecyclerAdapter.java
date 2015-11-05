@@ -6,6 +6,8 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.TextView;
 
 import com.w3bshark.android_simple_search.R;
@@ -14,7 +16,8 @@ import com.w3bshark.android_simple_search.model.CsvItem;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements Filterable {
+
     public class TotalsViewHolder extends RecyclerView.ViewHolder {
 //        CardView cardView;
         TextView totalDescription;
@@ -46,6 +49,11 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         this.context = context;
         this.csvItems = csvItems;
         viewsForPositions.add(R.layout.recycler_totals_item);
+    }
+
+    @Override
+    public Filter getFilter() {
+        return new SearchFilter(this, csvItems);
     }
 
     @Override
@@ -110,54 +118,93 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         return csvItems == null ? viewsForPositions.size() : viewsForPositions.size() + csvItems.size();
     }
 
-    public CsvItem removeItem(int position) {
-        final CsvItem item = csvItems.remove(position);
-        notifyItemRemoved(position);
-        return item;
-    }
+    public static class SearchFilter extends Filter {
+        private final MainRecyclerAdapter adapter;
+        private final List<CsvItem> originalList;
+        private final List<CsvItem> filteredList;
 
-    public void addItem(int position, CsvItem item) {
-        csvItems.add(position, item);
-        notifyItemInserted(position);
-    }
+        public SearchFilter(MainRecyclerAdapter adapter, List<CsvItem> originalList) {
+            this.adapter = adapter;
+            this.originalList = new ArrayList<>(originalList);
+            this.filteredList = new ArrayList<>();
+        }
 
-    public void moveItem(int fromPosition, int toPosition) {
-        final CsvItem item = csvItems.remove(fromPosition);
-        csvItems.add(toPosition, item);
-        notifyItemMoved(fromPosition, toPosition);
-    }
+        @Override
+        protected FilterResults performFiltering(CharSequence constraint) {
+            filteredList.clear();
+            final FilterResults results = new FilterResults();
 
-    public void animateTo(ArrayList<CsvItem> items) {
-        applyAndAnimateRemovals(items);
-        applyAndAnimateAdditions(items);
-        applyAndAnimateMovedItems(items);
-        // Update the totals number displayed
-        notifyItemChanged(TOTALS_SECTION);
-    }
+            if (constraint.length() == 0) {
+                filteredList.addAll(originalList);
+            } else {
+                final String filterPattern = constraint.toString().toLowerCase().trim();
 
-    private void applyAndAnimateRemovals(ArrayList<CsvItem> newItems) {
-        for (int i = csvItems.size() - 1; i >= 0; i--) {
-            final CsvItem item = csvItems.get(i);
-            if (!newItems.contains(item)) {
-                removeItem(i);
+                for (final CsvItem item : originalList) {
+                    if (item.getDescription().toLowerCase().trim().contains(filterPattern)) {
+                        filteredList.add(item);
+                    }
+                }
             }
+            results.values = filteredList;
+            results.count = filteredList.size();
+            return results;
+        }
+
+        @Override
+        protected void publishResults(CharSequence constraint, FilterResults results) {
+            adapter.csvItems.clear();
+            adapter.csvItems.addAll((ArrayList<CsvItem>) results.values);
+            adapter.notifyDataSetChanged();
         }
     }
-    private void applyAndAnimateAdditions(ArrayList<CsvItem> newModels) {
-        for (int i = 0, count = newModels.size(); i < count; i++) {
-            final CsvItem item = newModels.get(i);
-            if (!csvItems.contains(item)) {
-                addItem(i, item);
-            }
-        }
-    }
-    private void applyAndAnimateMovedItems(ArrayList<CsvItem> newModels) {
-        for (int toPosition = newModels.size() - 1; toPosition >= 0; toPosition--) {
-            final CsvItem item = newModels.get(toPosition);
-            final int fromPosition = csvItems.indexOf(item);
-            if (fromPosition >= 0 && fromPosition != toPosition) {
-                moveItem(fromPosition, toPosition);
-            }
-        }
-    }
+//    public CsvItem removeItem(int position) {
+//        final CsvItem item = csvItems.remove(position);
+//        notifyItemRemoved(position);
+//        return item;
+//    }
+//
+//    public void addItem(int position, CsvItem item) {
+//        csvItems.add(position, item);
+//        notifyItemInserted(position);
+//    }
+//
+//    public void moveItem(int fromPosition, int toPosition) {
+//        final CsvItem item = csvItems.remove(fromPosition);
+//        csvItems.add(toPosition, item);
+//        notifyItemMoved(fromPosition, toPosition);
+//    }
+
+//    public void animateTo(ArrayList<CsvItem> items) {
+//        applyAndAnimateRemovals(items);
+//        applyAndAnimateAdditions(items);
+//        applyAndAnimateMovedItems(items);
+//        // Update the totals number displayed
+//        notifyItemChanged(TOTALS_SECTION);
+//    }
+
+//    private void applyAndAnimateRemovals(ArrayList<CsvItem> newItems) {
+//        for (int i = csvItems.size() - 1; i >= 0; i--) {
+//            final CsvItem item = csvItems.get(i);
+//            if (!newItems.contains(item)) {
+//                removeItem(i);
+//            }
+//        }
+//    }
+//    private void applyAndAnimateAdditions(ArrayList<CsvItem> newModels) {
+//        for (int i = 0, count = newModels.size(); i < count; i++) {
+//            final CsvItem item = newModels.get(i);
+//            if (!csvItems.contains(item)) {
+//                addItem(i, item);
+//            }
+//        }
+//    }
+//    private void applyAndAnimateMovedItems(ArrayList<CsvItem> newModels) {
+//        for (int toPosition = newModels.size() - 1; toPosition >= 0; toPosition--) {
+//            final CsvItem item = newModels.get(toPosition);
+//            final int fromPosition = csvItems.indexOf(item);
+//            if (fromPosition >= 0 && fromPosition != toPosition) {
+//                moveItem(fromPosition, toPosition);
+//            }
+//        }
+//    }
 }

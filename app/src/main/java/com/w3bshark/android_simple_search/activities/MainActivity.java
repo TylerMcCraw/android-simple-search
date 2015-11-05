@@ -48,16 +48,14 @@ public class MainActivity extends AppCompatActivity {
          */
         @Override
         public boolean onQueryTextChange(String newText) {
-            if (newText != null && newText.length() > 2) {
+            if (newText != null) {
                 MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
                 fragment.filterCSVItems(newText);
                 return true;
-            } else if (newText == null || newText.isEmpty()) {
+            } else {
                 MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
                 // Passing null here will just reset the view with all data
                 fragment.filterCSVItems(null);
-                return true;
-            } else {
                 return false;
             }
         }
