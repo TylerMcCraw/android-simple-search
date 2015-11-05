@@ -3,4 +3,15 @@
     <dimen name="activity_horizontal_margin">16dp</dimen>
     <dimen name="activity_vertical_margin">16dp</dimen>
     <dimen name="fab_margin">16dp</dimen>
+
+    <!-- Recycler Item -->
+    <dimen name="cardview_elevation">0dp</dimen>
+    <dimen name="cardview_cornerradius">1dp</dimen>
+    <dimen name="cardview_layoutheight">100dp</dimen>
+    <dimen name="cardview_paddingstart">14dp</dimen>
+    <dimen name="cardview_paddingtop">16dp</dimen>
+    <dimen name="cardview_paddingbottom">16dp</dimen>
+    <dimen name="cardview_paddingend">16dp</dimen>
+    <dimen name="cardview_text_margintop">4dp</dimen>
+    <dimen name="cardview_text_textsize">22sp</dimen>
 </resources>

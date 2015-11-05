@@ -44,6 +44,8 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     private static final String SAVED_ITEMS = "SAVED_ITEMS";
     private ArrayList<CsvItem> csvItems;
     private ArrayList<CsvItem> unfilteredCsvItems;
+    private IntentFilter mStatusIntentFilter;
+    private BroadcastReceiver mServiceStateReceiver;
     private FrameLayout mProgressOverlay;
 
     private static final String[] CSVDATA_COLUMNS = {
@@ -106,27 +108,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         });
         mSwipeRefreshLayout.setColorSchemeResources(R.color.smashing_pink);
 
-        // Register a Broadcast Receiver so that we know when to restart the loader and refresh data displayed
-        // The filter's action is com.w3bshark.android_simple_search.action.CSVPULLRETURN
-        IntentFilter mStatusIntentFilter = new IntentFilter(CsvPullService.ACTION_CSVPULL_RETURN);
-        // Instantiates a new ServiceStateReceiver
-        BroadcastReceiver mServiceStateReceiver = new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                if (intent.getAction().equals(CsvPullService.ACTION_CSVPULL_RETURN)) {
-                    restartLoader();
-                    // Stop the service, since we no longer need it
-                    Intent stopIntent = new Intent(getActivity(), CsvPullService.class);
-                    getActivity().stopService(stopIntent);
-                    toggleProgressBar(false);
-                    mSwipeRefreshLayout.setRefreshing(false);
-                }
-            }
-        };
-        // Registers the DownloadStateReceiver and its intent filters
-        LocalBroadcastManager.getInstance(getContext()).registerReceiver(
-                mServiceStateReceiver,
-                mStatusIntentFilter);
+        registerReceivers();
 
         return rootView;
     }
@@ -139,7 +121,9 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     @Override
     public void onSaveInstanceState(Bundle savedInstanceState) {
         if (csvItems != null) {
-            savedInstanceState.putParcelableArrayList(SAVED_ITEMS, csvItems);
+            // Need to clone items here because onLoaderReset() will clear items
+            ArrayList<CsvItem> itemsClone = new ArrayList<>(csvItems);
+            savedInstanceState.putParcelableArrayList(SAVED_ITEMS, itemsClone);
         }
         super.onSaveInstanceState(savedInstanceState);
     }
@@ -157,11 +141,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         }
         unfilteredCsvItems = data;
         csvItems.clear();
-        String temp = data.size() + getString(R.string.items_count);
-        CsvItem item = new CsvItem();
-        item.setId("00");
-        item.setDescription(temp);
-        csvItems.add(item);
         csvItems.addAll(data);
         if (mRecyclerAdapter == null) {
             initializeAdapter();
@@ -187,11 +166,6 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         toggleProgressBar(true);
         if (query == null || query.isEmpty()) {
             csvItems.clear();
-            String temp = unfilteredCsvItems.size() + getString(R.string.items_count);
-            CsvItem item = new CsvItem();
-            item.setId("00");
-            item.setDescription(temp);
-            csvItems.add(item);
             csvItems.addAll(unfilteredCsvItems);
             restartLoader();
             toggleProgressBar(false);
@@ -200,20 +174,20 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             mRecyclerAdapter.animateTo(filteredItemsList);
             mRecyclerView.scrollToPosition(0);
             csvItems.clear();
-            String temp = filteredItemsList.size() + getString(R.string.items_count);
-            CsvItem item = new CsvItem();
-            item.setId("00");
-            item.setDescription(temp);
-            csvItems.add(item);
             csvItems.addAll(filteredItemsList);
             toggleProgressBar(false);
         }
     }
 
     private ArrayList<CsvItem> filter(ArrayList<CsvItem> items, String query) {
+        final ArrayList<CsvItem> filteredModelList = new ArrayList<>();
+
+        if (items == null) {
+            return filteredModelList;
+        }
+
         query = query.toLowerCase();
 
-        final ArrayList<CsvItem> filteredModelList = new ArrayList<>();
         for (CsvItem item : items) {
             final String text = item.getDescription().toLowerCase();
             if (text.contains(query)) {
@@ -221,6 +195,14 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             }
         }
         return filteredModelList;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mServiceStateReceiver != null) {
+            unregisterReceivers();
+        }
     }
 
     private void restartLoader() {
@@ -238,5 +220,39 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
         } else {
             Util.animateView(mProgressOverlay, View.INVISIBLE, 0.4f, 3);
         }
+    }
+
+    private void registerReceivers() {
+        // Register a Broadcast Receiver so that we know when to restart the loader and refresh data displayed
+        // The filter's action is com.w3bshark.android_simple_search.action.CSVPULLRETURN
+        if (mStatusIntentFilter == null) {
+            mStatusIntentFilter = new IntentFilter(CsvPullService.ACTION_CSVPULL_RETURN);
+        }
+        // Instantiates a new ServiceStateReceiver
+        if (mServiceStateReceiver == null) {
+            mServiceStateReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    if (CsvPullService.ACTION_CSVPULL_RETURN.equals(intent.getAction())) {
+                        restartLoader();
+                        // Stop the service, since we no longer need it
+                        Intent stopIntent = new Intent(getActivity(), CsvPullService.class);
+                        getActivity().stopService(stopIntent);
+                        toggleProgressBar(false);
+                        mSwipeRefreshLayout.setRefreshing(false);
+                    }
+                }
+            };
+        }
+        // Registers the DownloadStateReceiver and its intent filters
+        LocalBroadcastManager.getInstance(getContext()).registerReceiver(
+                mServiceStateReceiver,
+                mStatusIntentFilter);
+    }
+
+    private void unregisterReceivers() {
+        LocalBroadcastManager.getInstance(getContext()).unregisterReceiver(mServiceStateReceiver);
+        mStatusIntentFilter = null;
+        mServiceStateReceiver = null;
     }
 }
