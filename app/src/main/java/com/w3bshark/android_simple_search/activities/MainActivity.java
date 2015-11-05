@@ -16,11 +16,66 @@ import com.w3bshark.android_simple_search.R;
 import com.w3bshark.android_simple_search.fragments.MainActivityFragment;
 import com.w3bshark.android_simple_search.services.CsvPullService;
 
-public class MainActivity extends AppCompatActivity implements SearchView.OnQueryTextListener {
+public class MainActivity extends AppCompatActivity {
 
     // Key for storing global check if csv has been parsed and stored in DB
     public static final String CSV_PARSED = "CSV_PARSED";
     public Intent mServiceIntent;
+
+    private SearchView.OnQueryTextListener mSearchQueryListener = new SearchView.OnQueryTextListener() {
+        /**
+         * Handle submission of queries
+         * Overridden from SearchView.OnQueryTextListener
+         * @param query text of query entered in search view
+         * @return boolean to handle whether or not the query can be submitted
+         */
+        @Override
+        public boolean onQueryTextSubmit(String query) {
+            if (query != null) {
+                MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
+                fragment.filterCSVItems(query);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        /**
+         * Handle query text change in search view
+         * Overridden from SearchView.OnQueryTextListener
+         * @param newText text of query entered in search view
+         * @return boolean to handle whether or not the query can be changed
+         */
+        @Override
+        public boolean onQueryTextChange(String newText) {
+            if (newText != null && newText.length() > 2) {
+                MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
+                fragment.filterCSVItems(newText);
+                return true;
+            } else if (newText == null || newText.isEmpty()) {
+                MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
+                // Passing null here will just reset the view with all data
+                fragment.filterCSVItems(null);
+                return true;
+            } else {
+                return false;
+            }
+        }
+    };
+    private MenuItemCompat.OnActionExpandListener mActionExpandListener = new MenuItemCompat.OnActionExpandListener() {
+        @Override
+        public boolean onMenuItemActionExpand(MenuItem item) {
+            return true;
+        }
+
+        @Override
+        public boolean onMenuItemActionCollapse(MenuItem item) {
+            MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
+            // Passing null here will just reset the view with all data
+            fragment.filterCSVItems(null);
+            return true;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -50,19 +105,23 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.menu_main, menu);
 
+        MenuItem menuItem = menu.findItem(R.id.action_search);
+        menuItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM | MenuItem.SHOW_AS_ACTION_COLLAPSE_ACTION_VIEW);
+        MenuItemCompat.setOnActionExpandListener(menuItem, mActionExpandListener);
         // Associate searchable configuration with the SearchView
-        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menu.findItem(R.id.action_search));
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(menuItem);
         SearchManager searchManager = (SearchManager) getSystemService(SEARCH_SERVICE);
         searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
-            @Override
-            public boolean onClose() {
-                MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
-                // Passing null here will just reset the view with all data
-                fragment.filterCSVItems(null);
-                return false;
-            }
-        });
+        searchView.setOnQueryTextListener(mSearchQueryListener);
+//        searchView.setOnCloseListener(new SearchView.OnCloseListener() {
+//            @Override
+//            public boolean onClose() {
+//                MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
+//                // Passing null here will just reset the view with all data
+//                fragment.filterCSVItems(null);
+//                return false;
+//            }
+//        });
         return true;
     }
 
@@ -94,41 +153,6 @@ public class MainActivity extends AppCompatActivity implements SearchView.OnQuer
             String query = intent.getStringExtra(SearchManager.QUERY);
             MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
             fragment.filterCSVItems(query);
-        }
-    }
-
-    //TODO: there's an out of memory error here
-    /**
-     * Handle submission of queries
-     * Overridden from SearchView.OnQueryTextListener
-     * @param query text of query entered in search view
-     * @return boolean to handle whether or not the query can be submitted
-     */
-    @Override
-    public boolean onQueryTextSubmit(String query) {
-        if (query != null) {
-            MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
-            fragment.filterCSVItems(query);
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Handle query text change in search view
-     * Overridden from SearchView.OnQueryTextListener
-     * @param newText text of query entered in search view
-     * @return boolean to handle whether or not the query can be changed
-     */
-    @Override
-    public boolean onQueryTextChange(String newText) {
-        if (newText != null) {
-            MainActivityFragment fragment = (MainActivityFragment) getSupportFragmentManager().findFragmentById(R.id.main_container);
-            fragment.filterCSVItems(newText);
-            return true;
-        } else {
-            return false;
         }
     }
 }

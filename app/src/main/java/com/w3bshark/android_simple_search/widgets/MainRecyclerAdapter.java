@@ -16,12 +16,12 @@ import java.util.List;
 
 public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     public class TotalsViewHolder extends RecyclerView.ViewHolder {
-        CardView cardView;
+//        CardView cardView;
         TextView totalDescription;
 
         TotalsViewHolder(View itemView) {
             super(itemView);
-            cardView = (CardView) itemView.findViewById(R.id.main_fragment_totals_cardview);
+//            cardView = (CardView) itemView.findViewById(R.id.main_fragment_totals_cardview);
             totalDescription = (TextView)itemView.findViewById(R.id.totals_itemDescription);
         }
     }
@@ -45,11 +45,7 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
     public MainRecyclerAdapter(Context context, List<CsvItem> csvItems) {
         this.context = context;
         this.csvItems = csvItems;
-
         viewsForPositions.add(R.layout.recycler_totals_item);
-//        for (CsvItem item : csvItems) {
-//            viewsForPositions.add(R.layout.recycler_csv_item);
-//        }
     }
 
     @Override
@@ -78,28 +74,30 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
 
     @Override
     public void onBindViewHolder(RecyclerView.ViewHolder viewHolder, int position) {
-        int viewType = getItemViewType(position);
-        switch (viewType) {
+        switch (viewHolder.getItemViewType()) {
             case R.layout.recycler_totals_item:
-                setUpTotalsSection(viewHolder, position);
+                setUpTotalsSection(viewHolder);
                 break;
             default:
                 // This needs to be position minus additional views due to reusing cards for
                 // other view holders
-                setUpItemsSection(viewHolder, position - viewsForPositions.size());
+                if (position - viewsForPositions.size() >= 0
+                        && position - viewsForPositions.size() <= csvItems.size()) {
+                    setUpItemsSection(viewHolder, position - viewsForPositions.size());
+                }
         }
     }
 
-    private void setUpTotalsSection(RecyclerView.ViewHolder viewHolder, int position) {
+    private void setUpTotalsSection(RecyclerView.ViewHolder viewHolder) {
         TotalsViewHolder holder = (TotalsViewHolder) viewHolder;
-        String descr = "";
+        String totalsText = "";
         if (csvItems != null) {
-            descr = csvItems.size() + context.getString(R.string.items_count);
+            totalsText = csvItems.size() + context.getString(R.string.items_count);
         }
         else {
-            descr = "0" + context.getString(R.string.items_count);
+            totalsText = "0" + context.getString(R.string.items_count);
         }
-        holder.totalDescription.setText(descr);
+        holder.totalDescription.setText(totalsText);
     }
 
     private void setUpItemsSection(RecyclerView.ViewHolder viewHolder, int position) {
@@ -133,6 +131,8 @@ public class MainRecyclerAdapter extends RecyclerView.Adapter<RecyclerView.ViewH
         applyAndAnimateRemovals(items);
         applyAndAnimateAdditions(items);
         applyAndAnimateMovedItems(items);
+        // Update the totals number displayed
+        notifyItemChanged(TOTALS_SECTION);
     }
 
     private void applyAndAnimateRemovals(ArrayList<CsvItem> newItems) {

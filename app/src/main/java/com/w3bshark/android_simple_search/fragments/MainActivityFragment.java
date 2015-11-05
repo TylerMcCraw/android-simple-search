@@ -10,10 +10,14 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.support.v4.content.LocalBroadcastManager;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
@@ -47,6 +51,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     private IntentFilter mStatusIntentFilter;
     private BroadcastReceiver mServiceStateReceiver;
     private FrameLayout mProgressOverlay;
+    private Menu menu;
 
     private static final String[] CSVDATA_COLUMNS = {
             CsvDbEntry.TABLE_NAME + "." + CsvDbEntry._ID,
@@ -56,6 +61,17 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     private static final int CSVDBDATA_LOADER = 0;
 
     public MainActivityFragment() {
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        this.menu = menu;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -94,6 +110,8 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
 
         getLoaderManager().initLoader(CSVDBDATA_LOADER, null, this);
 
+        registerReceivers();
+
         // Handle user pull-down to refresh
         mSwipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.main_fragment_swipe_refresh_layout);
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -104,11 +122,11 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
                 mainAct.mServiceIntent = new Intent(mainAct, CsvPullService.class);
                 mainAct.mServiceIntent.setAction(CsvPullService.ACTION_CSVPULL);
                 mainAct.startService(mainAct.mServiceIntent);
+                MenuItem menuItem = menu.findItem(R.id.action_search);
+                MenuItemCompat.collapseActionView(menuItem);
             }
         });
         mSwipeRefreshLayout.setColorSchemeResources(R.color.smashing_pink);
-
-        registerReceivers();
 
         return rootView;
     }
@@ -148,6 +166,7 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
             mRecyclerAdapter.notifyDataSetChanged();
         }
         toggleProgressBar(false);
+        mSwipeRefreshLayout.setRefreshing(false);
     }
 
     @Override
@@ -162,11 +181,12 @@ public class MainActivityFragment extends Fragment implements LoaderManager.Load
     }
 
     public void filterCSVItems(String query) {
-        mSwipeRefreshLayout.setRefreshing(false);
         toggleProgressBar(true);
         if (query == null || query.isEmpty()) {
             csvItems.clear();
-            csvItems.addAll(unfilteredCsvItems);
+            if (unfilteredCsvItems != null) {
+                csvItems.addAll(unfilteredCsvItems);
+            }
             restartLoader();
             toggleProgressBar(false);
         } else {
