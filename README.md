@@ -1,2 +1,2 @@
 # android-simple-search
-A simple application offers search capabilities for that data loaded from a CSV
+A simple application that offers blazing fast search capabilities for data loaded from a CSV
